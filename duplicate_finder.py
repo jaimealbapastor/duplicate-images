@@ -106,6 +106,9 @@ def get_image_files(path):
             return mime.rsplit('/', 1)[1] in full_supported_formats
         except IndexError:
             return False
+        except UnicodeDecodeError as e:
+            print(f"UnicodeDecodeError for file: {file_name}. Error: {e}")
+            return False
 
     path = os.path.abspath(path)
     for root, dirs, files in os.walk(path):
@@ -160,7 +163,7 @@ def _add_to_database(file_, hash_, file_size, image_size, capture_time, db):
 
 
 def _in_database(file, db):
-    return db.count({"_id": file}) > 0
+    return db.count_documents({"_id": file}) > 0
 
 
 def new_image_files(files, db):
@@ -201,7 +204,7 @@ def clear(db):
 
 
 def show(db):
-    total = db.count()
+    total = db.count_documents({})
     pprint(list(db.find()))
     print("Total: {}".format(total))
 
@@ -248,7 +251,7 @@ def find(db, match_time=False):
 def delete_duplicates(duplicates, db):
     results = [delete_picture(x['file_name'], db)
                for dup in duplicates for x in dup['items'][1:]]
-    cprint("Deleted {}/{} files".format(results.count(True),
+    cprint("Deleted {}/{} files".format(results.count_documents(True),
                                         len(results)), 'yellow')
 
 
